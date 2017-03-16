@@ -14,7 +14,6 @@ def main(o, c, out):
     for l in lines:
         parsed = l.split(" ")
         parsed = [x for x in parsed if x != '']
-
         # Change base and create dictionary entry for base
         if parsed[0] == 'RESI':
             base_state = parsed[1]
@@ -24,6 +23,7 @@ def main(o, c, out):
 
         # Create dictionary entry inside a base state
         if parsed[0] == 'ATOM' and not atoms_converted[base_state].has_key(parsed[1]):
+            parsed[3] = parsed[3].replace("\r", "")
             atoms_converted[base_state][parsed[1]] = [parsed[2], parsed[3].replace('\n', '')]
     print "Done reading!"
 
@@ -36,44 +36,47 @@ def main(o, c, out):
     for l in lines:
         parsed = l.split(" ")
         parsed = [x for x in parsed if x != '']
-
         base_state = ""
         # Check base!
-        if len(parsed) == 9:
-            if parsed[7] == "A":
+        if len(parsed) == 12:
+            if parsed[3] == "A":
                 base_state = "ADE"
-            elif parsed[7] == "T":
+            elif parsed[3] == "T":
                 base_state = "THY"
+            elif parsed[3] == "C":
+                base_state = "CYT"
+            elif parsed[3] == "G":
+                base_state = "GUA"
             else:
                 print "ERROR: don't know which base is ", parsed[7] 
                 continue
         else:
             continue
         
-        if atoms_converted[base_state].has_key(parsed[1]):
-            index = parsed[1]
+        if atoms_converted[base_state].has_key(parsed[2]):
+            index = parsed[2]
             
             # Change name
             conversion_name = atoms_converted[base_state][index][0]
-            size = len(parsed[1]) - len(conversion_name)
+            size = len(parsed[2]) - len(conversion_name)
             if size < 0:
                 for i in range(0, -size):
-                    parsed[1] += " "
+                    parsed[2] += " "
             elif size > 0:
                 for i in range(0, size):
                     conversion_name += " "
-            l = l.replace(parsed[1], conversion_name)
+            l = l.replace(parsed[2], conversion_name)
 
             # Change charge
             conversion_charge = atoms_converted[base_state][index][1]
-            size = len(parsed[8]) - len(conversion_charge)
+            size = len(parsed[10]) - len(conversion_charge)
             if size < 0:
                 for i in range(0, -size):
-                    parsed[8] += " "
+                    parsed[10] += " "
             elif size > 0:
                 for i in range(0, size):
                     conversion_charge += " "
-            l = l.replace(parsed[8], conversion_charge)
+            l = l.replace(" " + parsed[10], " " + conversion_charge + " ")
             
         # Output
         out.write(l + "\n")
